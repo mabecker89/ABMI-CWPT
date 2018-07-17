@@ -38,7 +38,7 @@ The CWPT is a mapping product designed to give landowners, decision-makers, and 
 
 The CWPT is based off a methodology developed by the [Natural Capital Project (2018)](http://data.naturalcapitalproject.org/rios_releases/RIOSGuide_Combined_v1.1.16_30May2016.pdf) and is a spatially-explicit tool designed to identify areas of strategic importance for improving and maintaining water quality. In particular, the CWPT is designed around the objective of reducing nutrient runoff, which can improve downstream water quality and biodiversity, as well as potentially decrease water treatment costs and nutrient-related health risks to humans and livestock.
 
-The non-point source runoff of nutrients across the landscape is estimated using export coefficients developed for major landcover and human footprint types, in conjunction with annual precipitation and simulation of overland flow based on a hydrologically corrected digital elevation model [(Habib et al 2016)](https://peerj.com/articles/2814/). Speficially, the CWPT relies on three modelled attributes of the landscape to evaluate the relative importance of each quarter-section:
+The non-point source runoff of nutrients across the landscape is estimated using export coefficients developed for major landcover and human footprint types, in conjunction with annual precipitation and simulation of overland flow based on a hydrologically corrected digital elevation model [(Habib et al 2016)](https://peerj.com/articles/2814/). Specifically, the CWPT relies on three modelled attributes of the landscape to evaluate the relative importance of each quarter-section:
 
 + **Upslope Accumulation**: The sum total of nutrients exported from upslope areas whose flow paths move through the quarter-section. 
 
