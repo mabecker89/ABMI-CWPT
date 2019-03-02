@@ -1,8 +1,8 @@
 ---
 title: "Clean Water Prioritization Tool (CWPT)"
-subtitle: <h1>An Application to Parkland County, Alberta</h>
+subtitle: <h1>An Application to Strathcona County, Alberta</h>
 author: "Marcus Becker, Tom Habib"
-date: "November 14, 2018"
+date: "December 14, 2018"
 output: 
   html_document:
     highlight: zenburn
@@ -54,7 +54,7 @@ Importance is also reflected by the second attribute, downslope retention potent
 
 For both of these continuous variables, each quarter-section is binned into one of ten equal-sized groups and assigned a score between 1 and 10. An overall landscape importance score is calculated as the average between the two intermediate scores. Note that for the purposes of averaging these two attributes, the binned scores for downslope retention are reversed, such that a higher score represents higher importance (i.e. lower retention potential).
 
-The map below shows the landscape importance score associated with each quarter-section located within Parkland County, Alberta. The user can select specific quarter-sections and be given the legal land description and importance score, as well as display satellite imagery.  
+The map below shows the landscape importance score associated with each quarter-section located within Strathcona County, Alberta. The user can select specific quarter-sections and be given the legal land description and importance score, as well as display satellite imagery.  
 
 ```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE, cache = TRUE}
 
@@ -69,10 +69,10 @@ ab_counties <- st_read("./SpatialData/Clean/ab_counties.shp", stringsAsFactors =
 
 # Filter for Lac Ste Anne County
 pc_cwpt <- ab_cwpt_indices %>%
-  filter(C_MD_SA == "Parkland County")
+  filter(C_MD_SA == "Strathcona County")
 
 pc <- ab_counties %>%
-  filter(C_MD_SA == "Parkland County")
+  filter(C_MD_SA == "Strathcona County")
 
 # Set projection
 pc_cwpt <- st_transform(pc_cwpt, "+init=epsg:4326")
@@ -137,7 +137,7 @@ The last step of the CWPT involves the third landscape attribute, on-pixel contr
 
 This second score provides an indication as to what type of management actions may be appropriate. For example, a quarter-section with a low on-pixel contribution score will be generating a relatively small amount of nutrient runoff. In this case, the combination of low on-pixel sources and a high nutrient retention rate suggest that management oriented around **conservation** of existing landcover is most suitable. On the other hand, a high score would indicate that a high degree of nutrient runoff is occurring (due to high on-pixel sources and/or low rentention rates) and that **restoration** and/or **mitigation** actions should be prioritized. Such activities, for example, may include planting native vegetation or permanent cover, revegetating riparian areas, livestock management, and fertilizer management.
 
-The two scores can be used in combination to identify priority quarter-sections within a region and plan appropriate management actions. The map below displays the on-pixel contribution index score associated with each quarter-section in Parkland County; however, the user can filter the data to view only those quarter-sections that score progressively higher on the landscape importance score (based on upslope accumulation and downslope retention). A decision-maker can, for instance, choose to select only those quarters that score above a certain threshold on the importance index, and then use the second score as an indicator of which suite of management actions would be suitable at each site.
+The two scores can be used in combination to identify priority quarter-sections within a region and plan appropriate management actions. The map below displays the on-pixel contribution index score associated with each quarter-section in Strathcona County; however, the user can filter the data to view only those quarter-sections that score progressively higher on the landscape importance score (based on upslope accumulation and downslope retention). A decision-maker can, for instance, choose to select only those quarters that score above a certain threshold on the importance index, and then use the second score as an indicator of which suite of management actions would be suitable at each site.
 
 ```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
 

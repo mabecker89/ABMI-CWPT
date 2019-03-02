@@ -33,6 +33,7 @@ knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
 As part of the Ecosystem Services Assessment (ESA), the Alberta Biodiversity Monitoring Institute has developed a Clean Water Prioritization Tool (CWPT) to help guide municipalities in maintaining and enhancing water-related ecosystem services throughout their jurisdiction. Improvement of water quality is an important goal among many municipalities, and practical guidance on where to target conservation and management efforts to achieve ecosystem service gains in an efficient manner is needed. 
 
 The CWPT is a mapping product designed to give landowners, decision-makers, and extension agents information on the relative importance of each quarter-section in contributing to the provision of clean surface water, as well as guidance on appropriate management actions. 
+
 # Components of the Clean Water Prioritization Tool (CWPT)
 
 The CWPT is based off a methodology developed by the [Natural Capital Project (2018)](http://data.naturalcapitalproject.org/rios_releases/RIOSGuide_Combined_v1.1.16_30May2016.pdf) and is a spatially-explicit tool designed to identify areas of strategic importance for improving and maintaining water quality. In particular, the CWPT is designed around the objective of reducing nutrient runoff, which can improve downstream water quality and biodiversity, as well as potentially decrease water treatment costs and nutrient-related health risks to humans and livestock.
@@ -48,9 +49,10 @@ The non-point source runoff of nutrients across the landscape is estimated using
 ```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE, cache = TRUE}
 
 # Import data
-ab_cwpt_indices <- st_read("./SpatialData/Clean/ab_cwpt_indices.shp", stringsAsFactors = FALSE, quiet = TRUE)
 
-ab_counties <- st_read("./SpatialData/Clean/ab_counties.shp", stringsAsFactors = FALSE, quiet = TRUE)
+ab_cwpt_indices <- st_read("./SpatialData/Clean/ab_cwpt_indices.shp", stringsAsFactors = FALSE, quiet = TRUE) # Quarter-section level data 
+
+ab_counties <- st_read("./SpatialData/Clean/ab_counties.shp", stringsAsFactors = FALSE, quiet = TRUE) # Counties shape file
 
 # Filter for Lac Ste Anne County
 lsac_cwpt <- ab_cwpt_indices %>%
@@ -62,6 +64,9 @@ lsac <- ab_counties %>%
 # Set projection
 lsac_cwpt <- st_transform(lsac_cwpt, "+init=epsg:4326")
 lsac <- st_transform(lsac, "+init=epsg:4326")
+
+names(st_geometry(lsac)) = NULL
+names(st_geometry(lsac_cwpt)) = NULL
 
 ```
 
@@ -77,6 +82,8 @@ The map below shows the landscape importance score associated with each quarter-
 
 
 ```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
+
+# Prepare layers and colors
 
 # Define colours
 land <- colorNumeric("Blues", domain = lsac_cwpt$land_mp) # For landscape importance index score
@@ -96,7 +103,8 @@ lsac_cwpt_7 <- lsac_cwpt %>%
 lsac_cwpt_9 <- lsac_cwpt %>%
   filter(land_mp >= 9)
 
-# Generate leaflet map
+# Generate leaflet map of landscape position importance
+
 lsac_map_land <-
 lsac %>%
   leaflet() %>%
@@ -104,9 +112,6 @@ lsac %>%
   addProviderTiles("Esri.WorldImagery", group = "Imagery") %>%
   addFullscreenControl() %>%
   addResetMapButton() %>%
-  
-  # Want to add a way to search for an LLD. Probably best to do so via shiny? Enter into different fields the range, section, QS, 
-  # meridian, etc. 
   
   # Polygon Layers
   addPolygons(color = "#282828", weight = 2, smoothFactor = 0.2, opacity = 2) %>%
@@ -121,9 +126,12 @@ lsac %>%
             title = "Index Score", opacity = 1,
             group = "Landscape Position Importance Score") %>%
   
+  # Want to add a way to search for an LLD. Probably best to do so via shiny? 
+  # Enter into different fields the range, section, QS, meridian, etc.
+  
   # Search Features Layer
-  addSearchFeatures(targetGroups = "Landscape Position Importance Score",
-                    options = searchFeaturesOptions(zoom = 10, openPopup = TRUE)) %>%
+  # addSearchFeatures(targetGroups = "Landscape Position Importance Score",
+  #                  options = searchFeaturesOptions(zoom = 10, openPopup = TRUE)) %>%
 
   # Layers Control
   addLayersControl(overlayGroups = c("Landscape Position Importance Score",
@@ -145,7 +153,8 @@ The two scores can be used in combination to identify priority quarter-sections 
 
 ```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
 
-# Generate leaflet map
+# Generate leaflet map of on-pixel scores
+
 lsac_map_pix <-
 lsac %>%
   leaflet() %>%
@@ -155,8 +164,9 @@ lsac %>%
   addResetMapButton() %>%
   
   # Polygon Layers
+  addPolylines(color = "#282828", weight = 2, smoothFactor = 0.2) %>%
   addPolygons(color = "#282828", weight = 2, smoothFactor = 0.2,
-              opacity = 2) %>%
+              opacity = 2, group = "None") %>%
   addPolygons(data = lsac_cwpt, color = "#444444", weight = 0.4, smoothFactor = 0.5,
               opacity = 1.0, fillOpacity = 0.6,
               fillColor = ~ colour, group = "On-Pixel Contribution (All)", 
@@ -184,7 +194,8 @@ lsac %>%
 
   # Layers Control
   addLayersControl(overlayGroups = "Imagery",
-                   baseGroups = c("On-Pixel Contribution (All)", 
+                   baseGroups = c("None",
+                                  "On-Pixel Contribution (All)", 
                                   "On-Pixel Contribution (Landscape >= 5)",
                                   "On-Pixel Contribution (Landscape >= 7)", 
                                   "On-Pixel Contribution (Landscape >= 9)"),
