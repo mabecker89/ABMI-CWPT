@@ -1,0 +1,316 @@
+---
+title: "Clean Water Prioritization Tool (CWPT)"
+subtitle: <h1>An Application to the County of Grande Prairie and 
+          Bear Lake, Alberta</h>
+author: "Marcus Becker, Tom Habib"
+date: "February 6, 2019"
+output: 
+  html_document:
+    highlight: zenburn
+    theme: readable
+    toc: yes
+    toc_float: no
+    code_folding: hide
+---
+
+```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
+
+# Load packages
+library(tmaptools)
+library(tmap)
+library(sf)
+library(tidyverse)
+library(leaflet)
+library(htmlwidgets)
+library(leaflet.extras)
+library(Hmisc)
+
+knitr::opts_chunk$set(fig.width = 12, fig.height = 10)
+
+```
+
+# Introduction
+
+As part of the Ecosystem Services Assessment (ESA), the Alberta Biodiversity Monitoring Institute has developed a Clean Water Prioritization Tool (CWPT) to help guide municipalities in maintaining and enhancing water-related ecosystem services throughout their jurisdiction. Improvement of water quality is an important goal among many municipalities, and practical guidance on where to target conservation and management efforts to achieve ecosystem service gains in an efficient manner is needed. 
+
+The CWPT is a mapping product designed to give landowners, decision-makers, and extension agents information on the relative importance of each quarter-section in contributing to the provision of clean surface water, as well as guidance on appropriate management actions. 
+
+# Components of the Clean Water Prioritization Tool (CWPT)
+
+The CWPT is based off a methodology developed by the [Natural Capital Project (2018)](http://data.naturalcapitalproject.org/rios_releases/RIOSGuide_Combined_v1.1.16_30May2016.pdf) and is a spatially-explicit tool designed to identify areas of strategic importance for improving and maintaining water quality. In particular, the CWPT is designed around the objective of reducing nutrient runoff, which can improve downstream water quality and biodiversity, as well as potentially decrease water treatment costs and nutrient-related health risks to humans and livestock.
+
+The non-point source runoff of nutrients across the landscape is estimated using export coefficients developed for major landcover and human footprint types, in conjunction with annual precipitation and simulation of overland flow based on a hydrologically corrected digital elevation model [(Habib et al 2016)](https://peerj.com/articles/2814/). Specifically, the CWPT relies on three modelled attributes of the landscape to evaluate the relative importance of each quarter-section:
+
++ **Upslope Accumulation**: The sum total of nutrients exported from upslope areas whose flow paths move through the quarter-section. 
+
++ **Downslope Retention**: The sum total of nutrient retention potential of all downslope areas along the flow path from the quarter-section to a river or stream.
+
++ **On-pixel Contribution**: The nutrient source and retention capabilities of each quarter-section.
+
+```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE, cache = TRUE}
+
+# Import data
+ab_cwpt_indices <- st_read("./SpatialData/Clean/ab_cwpt_indices.shp",
+                      stringsAsFactors = FALSE, quiet = TRUE) # QS data 
+
+ab_counties <- st_read("./SpatialData/Clean/ab_counties.shp",
+                      stringsAsFactors = FALSE, quiet = TRUE) # Counties 
+
+bear_catch <- st_read("./SpatialData/Clean/BearLake_Catch/BearLake_catch_v1_LDTM.shp",
+                      stringsAsFactors = FALSE, quiet = TRUE) # Bear Lake catchment
+
+bear_cwpt <- st_read("./SpatialData/Clean/bearlakes_cwpt.shp",
+                     stringsAsFactors = FALSE, quiet = TRUE) # Bear Lakes QS
+
+# Filter for County of Grande Prairie No. 1
+gp_cwpt <- ab_cwpt_indices %>%
+  filter(C_MD_SA == "County of Grande Prairie No. 1")
+
+gp <- ab_counties %>%
+  filter(C_MD_SA == "County of Grande Prairie No. 1")
+
+# Set projection
+gp_cwpt <- st_transform(gp_cwpt, "+init=epsg:4326")
+gp <- st_transform(gp, "+init=epsg:4326")
+bear_catch <- st_transform(bear_catch, "+init=epsg:4326")
+bear_cwpt <- st_transform(bear_cwpt, "+init=epsg:4326")
+
+names(st_geometry(gp)) = NULL
+names(st_geometry(gp_cwpt)) = NULL
+names(st_geometry(bear_catch)) = NULL
+names(st_geometry(bear_cwpt)) = NULL
+
+```
+
+## Landscape Position Importance Score
+
+The relative importance of each quarter-section to service delivery depends on the first two attributes, both of which are highly related to **landscape position** and nearby **land use**. Quarters that are topographically situated such that they receive large amounts of nutrient runoff from upslope areas will have a greater opportunity to trap nutrients. Note that this can be due to either draining a large area, or draining an area with high runoff, e.g. due to intensive development (or both).
+
+Importance is also reflected by the second attribute, downslope retention potential. This attribute refers to the length of the flow path downslope of the quarter before flowing into a stream or river, weighted by the ability of land along that path to filter and trap nutrients. If downslope nutrient retention potential is low (due to a short flow path and/or highly developed land along it), management actions on the quarter will be relatively more beneficial for water quality services. Conversely, if retention potential downslope is high, the area will be less important.
+
+For both of these continuous variables, each quarter-section is binned into one of ten equal-sized groups and assigned a score between 1 and 10. An overall landscape importance score is calculated as the average between the two intermediate scores. Note that for the purposes of averaging these two attributes, the binned scores for downslope retention are reversed, such that a higher score represents higher importance (i.e. lower retention potential).
+
+The map below shows the landscape importance score associated with each quarter-section located within the County of Grande Prairie, Alberta. The user can select specific quarter-sections and be given the legal land description and importance score, as well as display satellite imagery. 
+
+
+```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
+
+# Prepare layers and colors
+
+# Define colours
+land <- colorNumeric("Blues", domain = gp_cwpt$land_mp) # For landscape importance index score
+
+c1 <- (c("#00441b","#238b45", "#74c476","#a1d99b", "#e5f5e0", 
+            "#f6e8c3","#dfc27d", "#bf812d","#8c510a", "#543005")) # For on-pixel index score
+c2 <- colorRampPalette(c1) # Interpolate
+gp_cwpt$colour <- c2(10)[gp_cwpt$self_bn]
+bear_cwpt$colour <- c2(10)[bear_cwpt$self_bn]
+cp <- colorNumeric(c("#00441b","#238b45", "#74c476","#a1d99b", "#e5f5e0", 
+                     "#f6e8c3","#dfc27d", "#bf812d","#8c510a", "#543005"),
+                   domain = gp_cwpt$self_bn)
+
+# Create df's of filtered landscape importance index score ranges 
+gp_cwpt_5 <- gp_cwpt %>%
+  filter(land_mp >= 5)
+gp_cwpt_7 <- gp_cwpt %>%
+  filter(land_mp >= 7)
+gp_cwpt_9 <- gp_cwpt %>%
+  filter(land_mp >= 9)
+
+bear_cwpt_5 <- bear_cwpt %>%
+  filter(land_mp >= 5)
+bear_cwpt_7 <- bear_cwpt %>%
+  filter(land_mp >= 7)
+bear_cwpt_9 <- bear_cwpt %>%
+  filter(land_mp >= 9)
+
+# Generate leaflet map of landscape position importance
+
+gp_map_land <-
+gp %>%
+  leaflet() %>%
+  addTiles() %>%
+  addProviderTiles("Esri.WorldImagery", group = "Imagery") %>%
+  addFullscreenControl() %>%
+  addResetMapButton() %>%
+  addMapPane(name = "Bear Lake Catchment", zIndex = 420) %>%
+  addMapPane(name = "Layers", zIndex = 410) %>%
+  
+  # Polygon Layers
+  addPolylines(color = "#0a0909", weight = 2, smoothFactor = 0.2) %>%
+  
+  addPolygons(color = "#282828", weight = 2, smoothFactor = 0.2, opacity = 2,
+              group = "None") %>%
+  
+  addPolygons(data = gp_cwpt, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ land(land_mp), group = "Landscape Position Importance Score (County)", 
+              popup = paste("Legal Land Description:", gp_cwpt$LLD, "<br>",
+                            "Landscape Position Importance Score:", gp_cwpt$land_mp),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolygons(data = bear_cwpt, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ land(land_mp), 
+              group = "Landscape Position Importance Score (BL Catchment)", 
+              popup = paste("Legal Land Description:", bear_cwpt$LLD, "<br>",
+                            "Landscape Position Importance Score:", bear_cwpt$land_mp),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolylines(data = bear_catch, color = "#0a0909", weight = 3, smoothFactor = 0.2,
+               opacity = 3.0, group = "Bear Lake Catchment Boundary", fill = FALSE,
+               options = leafletOptions(pane = "Bear Lake Catchment")) %>%
+  
+  # Legend Layer
+  addLegend(data = gp_cwpt, position = "bottomright", pal = land, values = ~ land_mp,
+            title = "Index Score", opacity = 1,
+            group = "Landscape Position Importance Score (County)") %>%
+
+  # Layers Control
+  addLayersControl(overlayGroups = c("Bear Lake Catchment Boundary",
+                                     "Imagery"),
+                   baseGroups = c("Landscape Position Importance Score (County)",
+                                  "Landscape Position Importance Score (BL Catchment)",
+                                  "None"),
+                   options = layersControlOptions(collapsed = FALSE,
+                                                  autoZIndex = TRUE)) %>%
+  hideGroup(c("Imagery", 
+              "Landscape Position Importance Score (BL Catchment)",
+              "None"))
+  
+gp_map_land
+
+```
+
+## Management Implications
+
+The last step of the CWPT involves the third landscape attribute, on-pixel contribution. Using export coefficients from ABMI's water purification model (Habib et al 2016), the nutrient load generated from each quarter-section is calculated. Similar to the other two attributes, this continuous variable is mapped into ten equal-sized bins and each quarter-section is given a score. 
+
+This second score provides an indication as to what type of management actions may be appropriate. For example, a quarter-section with a low on-pixel contribution score will be generating a relatively small amount of nutrient runoff. In this case, the combination of low on-pixel sources and a high nutrient retention rate suggest that management oriented around **conservation** of existing landcover is most suitable. On the other hand, a high score would indicate that a high degree of nutrient runoff is occurring (due to high on-pixel sources and/or low rentention rates) and that **restoration** and/or **mitigation** actions should be prioritized. Such activities, for example, may include planting native vegetation or permanent cover, revegetating riparian areas, livestock management, and fertilizer management.
+
+The two scores can be used in combination to identify priority quarter-sections within a region and plan appropriate management actions. The map below displays the on-pixel contribution index score associated with each quarter-section in the County of Grande Prairie (and the Bear Lake catchment); however, the user can filter the data to view only those quarter-sections that score progressively higher on the landscape importance score (based on upslope accumulation and downslope retention). A decision-maker can, for instance, choose to select only those quarters that score above a certain threshold on the importance index, and then use the second score as an indicator of which suite of management actions would be suitable at each site.
+
+```{r include = TRUE, echo = TRUE, message = FALSE, warning = FALSE, eval = TRUE}
+
+# Generate leaflet map of on-pixel scores
+
+gp_map_pix <-
+gp %>%
+  leaflet() %>%
+  addTiles() %>%
+  addProviderTiles("Esri.WorldImagery", group = "Imagery") %>%
+  addFullscreenControl() %>%
+  addResetMapButton() %>%
+  addMapPane(name = "Bear Lake Catchment", zIndex = 420) %>%
+  addMapPane(name = "Layers", zIndex = 410) %>%
+  
+  # Polygon Layers
+  addPolylines(color = "#0a0909", weight = 2, smoothFactor = 0.2) %>%
+  
+  addPolygons(color = "#282828", weight = 2, smoothFactor = 0.2,
+              opacity = 2, group = "None") %>%
+  
+  addPolygons(data = gp_cwpt, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ colour, group = "Pixel Contribution (County - All)", 
+              popup = paste("Legal Land Description:", gp_cwpt$LLD, "<br>",
+                            "Score:", gp_cwpt$self_bn),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolygons(data = bear_cwpt, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ colour, group = "Pixel Contribution (BL - All)", 
+              popup = paste("Legal Land Description:", bear_cwpt$LLD, "<br>",
+                            "Score:", bear_cwpt$self_bn),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolygons(data = bear_cwpt_5, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ colour, group = "Pixel Contribution (BL - Landscape >= 5)", 
+              popup = paste("Legal Land Description:", bear_cwpt_5$LLD, "<br>",
+                            "Score:", bear_cwpt_5$self_bn),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolygons(data = bear_cwpt_7, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ colour, group = "Pixel Contribution (BL - Landscape >= 7)", 
+              popup = paste("Legal Land Description:", bear_cwpt_7$LLD, "<br>",
+                            "Score:", bear_cwpt_7$self_bn),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolygons(data = bear_cwpt_9, color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.6,
+              fillColor = ~ colour, group = "Pixel Contribution (BL - Landscape >= 9)", 
+              popup = paste("Legal Land Description:", bear_cwpt_9$LLD, "<br>",
+                            "Score:", bear_cwpt_9$self_bn),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolylines(data = bear_catch, color = "#0a0909", weight = 3, smoothFactor = 0.2,
+               opacity = 3.0, group = "Bear Lake Catchment Boundary", fill = FALSE,
+               options = leafletOptions(pane = "Bear Lake Catchment")) %>%
+  
+  # Legend Layers
+  addLegend(data = gp_cwpt, position = "bottomright", pal = cp, values = ~ self_bn,
+            title = "Pixel Contribution Score", opacity = 1) %>%
+
+  # Layers Control
+  addLayersControl(overlayGroups = "Imagery",
+                   baseGroups = c("None",
+                                  "Pixel Contribution (County - All)",
+                                  "Pixel Contribution (BL - All)", 
+                                  "Pixel Contribution (BL - Landscape >= 5)",
+                                  "Pixel Contribution (BL - Landscape >= 7)", 
+                                  "Pixel Contribution (BL - Landscape >= 9)"),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  hideGroup(c("Pixel Contribution (County - All)",
+              "Pixel Contribution (BL - All)", 
+              "Pixel Contribution (BL - Landscape >= 5)",
+              "Pixel Contribution (BL - Landscape >= 7)", 
+              "Pixel Contribution (BL - Landscape >= 9)",
+              "Imagery"))
+
+gp_map_pix
+
+```
+
+# Conclusion
+
+The CWPT can be used to identify priority areas and guide the placement of conservation and restoration projects on the landscape. The first index score, landscape importance, indicates the relative importance of each quarter-section within a region, whereas the second score, on-pixel contribution, can be used as a guide for deciding upon the appropriate course of action. 
+
+It is important to keep in mind that local conditions will vary widely at each site, and that some management actions may be more suitable / effective than others. Using this tool as a first-step screening process, landowners, decision-makers, and extension officials can work together to determine a mutually beneficial course of action to improve or mantain water-related ecosystem services.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
