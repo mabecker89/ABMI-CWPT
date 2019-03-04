@@ -192,6 +192,51 @@ plot1
 
 # Now let's do at LUF planning regions '_4'
 
+# We actually need to redo this step - calculate % of white zone in each LUF
+# planning region. 
+
+luf_w <- ab_cwpt2_qs_1 %>%
+  st_set_geometry(NULL) %>%
+  filter(!is.na(LUF_CODE)) %>%
+  group_by(LUF_NAME, GWA_NAME) %>%
+  count() %>%
+  filter(!is.na(GWA_NAME)) %>%
+  spread(GWA_NAME, n, fill = 0) %>%
+  rename(Green = 'Green Area', White = 'White Area') %>%
+  mutate(total_qs = Green + White,
+         prop_w = White / total_qs) 
+# I think it would be best to keep each planning region in the tool, even though
+# a couple are below 10% in white zone (Lower Athabasca, Lower Peace). We will 
+# be filtering out the green zone quarter anyway. 
+
+ab_cwpt2_qs_2_4 <- ab_cwpt2_qs_1 %>%
+  select(LinkID, up_15__min:down_15__2, qs_p_load, GWA_NAME, HUC_2:LUF_CODE,
+         County_MD_SA) %>%
+  filter(GWA_NAME == "White Area") %>%
+  # Create LLD variable
+  mutate(Meridian = "W") %>%
+  mutate(LLD = paste0(Meridian, LinkID)) %>%
+  separate(LLD, c("Meridian", "Range", "Township", "Section", "Quarter"),
+           sep = "-") %>%
+  unite(LLD, c("Quarter", "Section", "Township", "Range", "Meridian"),
+        sep = "-", remove = FALSE)
+
+# Create df of lld & geometries (stashed away for later)
+ab_lld_geo_4 <- ab_cwpt2_qs_2_4 %>%
+  select(LLD)
+
+ab_cwpt2_qs_3_4 <- ab_cwpt2_qs_2_4 %>%
+  # Remove geometry to improve speed
+  st_set_geometry(NULL) %>%
+  # Calculate percentiles in order to remove outliers later
+  group_by(LUF_CODE) %>%
+  # LUF is '_4'
+  mutate(pt_upmean_4 = percent_rank(up_15__mea),
+         pt_upmax_4 = percent_rank(up_15__max),
+         pt_dmean_4 = percent_rank(down_15__2),
+         pt_pix_4 = percent_rank(qs_p_load)) %>%
+  ungroup()
+
 # Read in csv files generated - this is LUF level. 
 all_upmax_4 <- read_csv("./Beta/StagingData/all_upmax_j4.csv")
 all_upmean_4 <- read_csv("./Beta/StagingData/all_upmean_j4.csv")
@@ -211,13 +256,13 @@ all_4 <- all_upmean_4 %>%
          j_pix_4 = replace_na(j_pix_4, 10),
          j_dmean_4 = replace_na(j_dmean_4, 10)) %>%
   mutate_if(is.factor, as.character) %>%
-  # Invest downslope retention score
+  # Invert downslope retention score
   mutate(j_dmean_41 = 11L-as.numeric(j_dmean_4)) %>%
   mutate_at(vars(j_upmean_4:j_dmean_4), as.numeric)
 
 # Join back to qs-level data - let's track LUF planning regions separately here.
 
-ab_cwpt2_qs_l <- ab_cwpt2_qs_3 %>%
+ab_cwpt2_qs_l <- ab_cwpt2_qs_3_4 %>%
   select(LLD, LUF_CODE, up_15__max, up_15__mea, down_15__2, qs_p_load,
          pt_upmean_4:pt_pix_4, Meridian:Quarter) %>%
   left_join(all_4, by = "LLD") %>%
@@ -277,7 +322,9 @@ ab_cwpt2_qs_2_2 <- ab_cwpt2_qs_1 %>%
 
 # Create df of lld & geometries (stashed away for later)
 ab_lld_geo_2 <- ab_cwpt2_qs_2_2 %>%
+  filter(GWA_NAME == "White Area") %>%
   select(LLD)
+
 
 ab_cwpt2_qs_3_2 <- ab_cwpt2_qs_2_2 %>%
   # Remove geometry to improve speed
@@ -295,6 +342,64 @@ ab_cwpt2_qs_3_2 <- ab_cwpt2_qs_2_2 %>%
 # Different number of quarter sections in each 'all_' dataframe. Why would this 
 # be? Probably something to do with the white zone filter that I put on. To 
 # investigate on Saturday!
+
+# Read in csv files generated - this is HUC2 level. 
+all_upmax_2 <- read_csv("./Beta/StagingData/all_upmax_j2.csv")
+all_upmean_2 <- read_csv("./Beta/StagingData/all_upmean_j2.csv")
+all_dmean_2 <- read_csv("./Beta/StagingData/all_dmean_j2.csv")
+all_pix_2 <- read_csv("./Beta/StagingData/all_pix_j2.csv")
+
+all_2 <- all_upmean_2 %>%
+  full_join(all_upmax_2, by = "LLD") %>%
+  full_join(all_pix_2, by = "LLD") %>%
+  full_join(all_dmean_2, by = "LLD") %>%
+  distinct() %>%
+  select(LLD, j_upmean_2, j_upmax_2, j_pix_2, j_dmean_2) %>%
+  # Replace NAs with '10'
+  mutate(j_upmean_2 = replace_na(j_upmean_2, 10),
+         j_upmax_2 = replace_na(j_upmax_2, 10),
+         j_pix_2 = replace_na(j_pix_2, 10),
+         j_dmean_2 = replace_na(j_dmean_2, 10)) %>%
+  mutate_if(is.factor, as.character) %>%
+  # Invert downslope retention score
+  mutate(j_dmean_21 = 11L-as.numeric(j_dmean_2)) %>%
+  mutate_at(vars(j_upmean_2:j_dmean_2), as.numeric)
+
+# Join back to qs-level data - let's track HUC2 planning regions separately 
+# here.
+
+ab_cwpt2_qs_h2 <- ab_cwpt2_qs_3_2 %>%
+  filter(GWA_NAME == "White Area") %>%
+  select(LLD, HUC_2, NAME, up_15__max, up_15__mea, down_15__2, qs_p_load,
+         pt_upmean_2:pt_pix_2, Meridian:Quarter) %>%
+  left_join(all_2, by = "LLD") %>%
+  filter(!is.na(HUC_2)) %>%
+  # Calculate quantile indices
+  group_by(HUC_2) %>%
+  mutate(q_upmean_2 = as.numeric(cut2(up_15__mea, g = 10)),
+         q_upmax_2 = as.numeric(cut2(up_15__max, g = 10)),
+         q_dmean_2 = as.numeric(cut2(down_15__2, g = 10)),
+         q_pix_2 = as.numeric(cut2(qs_p_load, g = 10))) %>%
+  ungroup() %>%
+  mutate(q_dmean_21 = 11L-as.numeric(q_dmean_2))
+
+#-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

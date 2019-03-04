@@ -669,85 +669,85 @@ write.csv(all_wain, "./Beta/StagingData/all_wain_j1.csv")
 
 # LUF level
 
-upmax_4 <- ab_cwpt2_qs_3 %>%
+pix_4 <- ab_cwpt2_qs_3_4 %>%
   # Filter out high-end outliers - to be assigned a '10' later
-  filter(pt_upmax_4 <= 0.99) %>%
-  split(.$HUC_2) %>%
-  map(~ classIntervals(.$up_15__max, style = "fisher", n = 10))
+  filter(pt_pix_4 <= 0.99) %>%
+  split(.$LUF_CODE) %>%
+  map(~ classIntervals(.$qs_p_load, style = "fisher", n = 10))
 
 # Lower Peace 01
-lp01_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "01",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["01"]]$brks,
+lp01_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "01",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["01"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
 # Lower Athabasca 02
-la02_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "02",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["02"]]$brks,
+la02_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "02",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["02"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
 # Upper Peace 03
-up03_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "03",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["03"]]$brks,
+up03_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "03",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["03"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
 # Upper Athabasca 04
-ua04_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "04",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["04"]]$brks,
+ua04_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "04",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["04"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
 # North Saskatchewan 05
-ns05_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "05",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["05"]]$brks,
+ns05_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "05",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["05"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
 # Red Deer 06
-rd06_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "06",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["06"]]$brks,
+rd06_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "06",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["06"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
 # South Saskatchewan 07
-ss07_upmax <- ab_cwpt2_qs_3 %>%
-  filter(HUC_2 == "07",
-         pt_upmax_4 <= 0.99) %>%
-  select(LLD, up_15__max) %>%
-  mutate(j_upmax_4 = cut(up_15__max, 
-                       breaks = upmax_4[["07"]]$brks,
+ss07_pix <- ab_cwpt2_qs_3_4 %>%
+  filter(LUF_CODE == "07",
+         pt_pix_4 <= 0.99) %>%
+  select(LLD, qs_p_load) %>%
+  mutate(j_pix_4 = cut(qs_p_load, 
+                       breaks = pix_4[["07"]]$brks,
                        labels = as.numeric(1:10))) %>%
-  mutate(j_upmax_4 = replace_na(j_upmax_4, 1))
+  mutate(j_pix_4 = replace_na(j_pix_4, 1))
 
-all_upmax_4 <- bind_rows(
-  la02_upmax, lp01_upmax, ns05_upmax, rd06_upmax, ss07_upmax, ua04_upmax, 
-  up03_upmax
+all_pix_4 <- bind_rows(
+  la02_pix, lp01_pix, ns05_pix, rd06_pix, ss07_pix, ua04_pix, 
+  up03_pix
 )
 
 write.csv(all_upmax_4, "./Beta/StagingData/all_upmax_j4.csv")
@@ -812,15 +812,15 @@ rdr_dmean <- ab_cwpt2_qs_3_2 %>%
   mutate(j_dmean_2 = replace_na(j_dmean_2, 1))
 
 # Battle River - 09
-br_dmean <- ab_cwpt2_qs_3_2 %>%
+battle_upmax <- ab_cwpt2_qs_3_2 %>%
   filter(HUC_2 == "09",
-         pt_dmean_2 <= 0.99,
+         pt_upmax_2 <= 0.99,
          GWA_NAME == "White Area") %>%
-  select(LLD, down_15__2) %>%
-  mutate(j_dmean_2 = cut(down_15__2, 
-                         breaks = dmean_2[["09"]]$brks,
+  select(LLD, up_15__max) %>%
+  mutate(j_upmax_2 = cut(up_15__max, 
+                         breaks = upmax_2[["09"]]$brks,
                          labels = as.numeric(1:10))) %>%
-  mutate(j_dmean_2 = replace_na(j_dmean_2, 1))
+  mutate(j_upmax_2 = replace_na(j_upmax_2, 1))
 
 # North Saskatchewan River - 11
 nsr_dmean <- ab_cwpt2_qs_3_2 %>%
@@ -855,7 +855,7 @@ arb_dmean <- ab_cwpt2_qs_3_2 %>%
                          labels = as.numeric(1:10))) %>%
   mutate(j_dmean_2 = replace_na(j_dmean_2, 1))
 
-# Peace River
+# Peace River - 18
 pr_dmean <- ab_cwpt2_qs_3_2 %>%
   filter(HUC_2 == "18",
          pt_dmean_2 <= 0.99,
@@ -866,15 +866,15 @@ pr_dmean <- ab_cwpt2_qs_3_2 %>%
                          labels = as.numeric(1:10))) %>%
   mutate(j_dmean_2 = replace_na(j_dmean_2, 1))
 
-all_dmean_2 <- bind_rows(
-  plmr_dmean, ssr_dmean, sc_dmean, rdr_dmean, br_dmean, nsr_dmean, br_dmean,
-  arb_dmean, pr_dmean
+all_upmax_2 <- bind_rows(
+  plmr_upmax, ssr_upmax, sc_upmax, rdr_upmax, battle_upmax, nsr_upmax, br_upmax,
+  arb_upmax, pr_upmax
 )
 
-write.csv(all_upmax_4, "./Beta/StagingData/all_upmax_j4.csv")
-write.csv(all_upmean_4, "./Beta/StagingData/all_upmean_j4.csv")
-write.csv(all_dmean_4, "./Beta/StagingData/all_dmean_j4.csv")
-write.csv(all_pix_4, "./Beta/StagingData/all_pix_j4.csv")
+write.csv(all_upmax_2, "./Beta/StagingData/all_upmax_j2.csv")
+write.csv(all_upmean_2, "./Beta/StagingData/all_upmean_j2.csv")
+write.csv(all_dmean_2, "./Beta/StagingData/all_dmean_j2.csv")
+write.csv(all_pix_2, "./Beta/StagingData/all_pix_j2.csv")
 
 
 
