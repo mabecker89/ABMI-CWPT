@@ -17,19 +17,44 @@ Technical documentation is here.
 Available Areas of Interest:
 
 Municipalities
-+ Lac Ste. Anne County
++ Lac Ste. Anne 
++ Parkland
++ Leduc
++ Brazeau
++ Wetaskiwin
++ Lacombe
++ Vermilion River
++ Flagstaff
++ Red Deer
++ Mountain View
++ Rocky View
++ Wheatland
++ Vulcan
++ Northern Sunrise
++ Camrose
++ Ponoka
++ MD Greenview
++ Grande Prairie 
++ Big Lakes
 
 Land-Use Framework Planning Regions
++ North Saskatchewan
++ Red Deer
++ South Saskatchewan
 
 HUC 2 Watersheds
++ North Saskatchewan
++ Red Deer
++ South Saskatchewan
 
 Lake Catchments
++ Bear Lake
 
 
-Have questions on how to use the CWPT? Features you would like to see added? 
-Contact:
-Marcus Becker
-mabecker@ualberta.ca
+Have questions on how to use the CWPT? Features you would like to see added?\
+Contact:\
+**Marcus Becker**\
+mabecker@ualberta.ca\
 (780) 492-6322
 
 
