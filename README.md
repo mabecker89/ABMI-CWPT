@@ -17,7 +17,7 @@ Technical documentation is here.
 Available Areas of Interest:
 
 Municipalities
-+ (Lac Ste. Anne)[https://mabecker89.github.io/ABMI-CWPT/test] 
++ [Lac Ste. Anne](https://mabecker89.github.io/ABMI-CWPT/test)
 + Parkland
 + Leduc
 + Brazeau
