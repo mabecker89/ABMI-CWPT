@@ -84,6 +84,10 @@ Contact:
 mabecker@ualberta.ca\
 (780) 492-6322
 
+## Acknowledgements
+
+Funding and support for this work was provided by Alberta Innovates Bio Solutions (AI BIO) through the Ecosystem Services Assessment Project. 
+
 
 
 
