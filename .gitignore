@@ -2,8 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
-.IndexData
 SpatialData/
-IndexData/
-Beta/StagingData/
-RMarkdown/HTML-Cache
+Beta/
+Data/
+abmi_logo.png
+
