@@ -880,17 +880,95 @@ write.csv(all_pix_2, "./Beta/StagingData/all_pix_j2.csv")
 
 
 
+# Big Lakes County
+biglakes_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "Big Lakes County",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["Big Lakes County"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# Brazeau County
+brazeau_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "Brazeau County",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["Brazeau County"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# Clear Hills County
+clearhills_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "Clear Hills County",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["Clear Hills County"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# County of  Northern Lights
+northlights_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "County of  Northern Lights",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["County of  Northern Lights"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# Lac La Biche County
+llb_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "Lac La Biche County",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["Lac La Biche County"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# M.D. of Bighorn No. 8
+bighorn_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "M.D. of Bighorn No. 8",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["M.D. of Bighorn No. 8"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# M.D. of Ranchland No. 66
+ranchland_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "M.D. of Ranchland No. 66",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["M.D. of Ranchland No. 66"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
+# Municipality of Crowsnest Pass
+crowsnest_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "Municipality of Crowsnest Pass",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["Municipality of Crowsnest Pass"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
-
-
-
+# Saddle Hills County
+saddle_up_pmax <- cwpt_qs_mun_1_w50 %>%
+  filter(County_MD_SA == "Saddle Hills County",
+         pct_up_p_max <= 0.97) %>%
+  select(LLD, up_p_max) %>%
+  mutate(j_up_pmax = cut(up_p_max, 
+                         breaks = up_pmax[["Saddle Hills County"]]$brks,
+                         labels = as.numeric(1:10))) %>%
+  mutate(j_up_pmax = replace_na(j_up_pmax, 1))
 
 
 

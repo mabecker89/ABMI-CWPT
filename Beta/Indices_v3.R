@@ -78,7 +78,7 @@ county_w <- ab_cwpt2_qs_1 %>%
 
 ab_cwpt2_qs_2 <- ab_cwpt2_qs_1 %>%
   # Remove municipalities that are primarily Green Area
-  filter(County_MD_SA %in% county_w$County_MD_SA) %>%
+  # filter(County_MD_SA %in% county_w$County_MD_SA) %>%
   select(LinkID, up_15__min:down_15__2, qs_p_load, GWA_NAME, HUC_2:LUF_CODE,
          County_MD_SA) %>%
   # Create LLD variable
@@ -181,10 +181,10 @@ ab_cwpt2_qs_m <- ab_cwpt2_qs_3 %>%
 # Let's do some plots - e.g., plot Jenks vs. Quantiles
 
 plot1 <- ab_cwpt2_qs_m %>%
-  filter(pt_upmean_1 <= 0.98,
+  filter(pt_dmean_1 <= 0.98,
          County_MD_SA == "Starland County") %>%
-  ggplot(aes(x = up_15__mea)) +
-  geom_histogram(aes(fill = as.character(j_upmean_1)), bins = 100)
+  ggplot(aes(x = down_15__2)) +
+  geom_histogram(aes(fill = as.character(j_dmean_11)), bins = 100)
 
 plot1
 
@@ -338,12 +338,7 @@ ab_cwpt2_qs_3_2 <- ab_cwpt2_qs_2_2 %>%
          pt_pix_2 = percent_rank(qs_p_load)) %>%
   ungroup()
 
-# OK, finished all the jenks calculations - now, an interesting problem.
-# Different number of quarter sections in each 'all_' dataframe. Why would this 
-# be? Probably something to do with the white zone filter that I put on. To 
-# investigate on Saturday!
-
-# Read in csv files generated - this is HUC2 level. 
+# Read in csv files generated via JenksCalc script - this is HUC2 level. 
 all_upmax_2 <- read_csv("./Beta/StagingData/all_upmax_j2.csv")
 all_upmean_2 <- read_csv("./Beta/StagingData/all_upmean_j2.csv")
 all_dmean_2 <- read_csv("./Beta/StagingData/all_dmean_j2.csv")
@@ -385,6 +380,54 @@ ab_cwpt2_qs_h2 <- ab_cwpt2_qs_3_2 %>%
 
 #-------------------------------------------------------------------------------
 
+# Save quarter-section data in Staging folder for each spatial scale.
+
+write_csv(ab_cwpt2_qs_m, "./Beta/StagingData/ab_cwpt2_qs_m.csv")
+write_csv(ab_cwpt2_qs_l, "./Beta/StagingData/ab_cwpt2_qs_l.csv")
+write_csv(ab_cwpt2_qs_h2, "./Beta/StagingData/ab_cwpt2_qs_h2.csv")
+
+#-------------------------------------------------------------------------------
+
+# Create a merged dataframe w/ all quarters relevant to any of (or multiple) the
+# spatial scales. 
+
+ab_cwpt2_qs_m <- read_csv("./Beta/StagingData/ab_cwpt2_qs_m.csv")
+ab_cwpt2_qs_l <- read_csv("./Beta/StagingData/ab_cwpt2_qs_l.csv")
+ab_cwpt2_qs_h2 <- read_csv("./Beta/StagingData/ab_cwpt2_qs_h2.csv")
+
+mun <- ab_cwpt2_qs_m %>%
+  select(LLD:qs_p_load, Meridian:j_pix_1, j_dmean_11:q_upmax_1, q_pix_1, 
+         q_dmean_11)
+
+luf <- ab_cwpt2_qs_l %>%
+  # Will want LUF name joined in as well. 
+  select(LLD:qs_p_load, Meridian:j_pix_4, j_dmean_41:q_upmax_4, q_pix_4,
+         q_dmean_41)
+
+huc2 <- ab_cwpt2_qs_h2 %>%
+  select(LLD:qs_p_load, Meridian:j_pix_2, j_dmean_21:q_upmax_2, q_pix_2,
+         q_dmean_21)
+
+ab_cwpt2_qs_all <- mun %>%
+  full_join(luf, by = c("LLD", "up_15__max", "up_15__mea", "down_15__2",
+                        "qs_p_load", "Meridian", "Range", "Township",
+                        "Section", "Quarter")) %>%
+  full_join(huc2, by = c("LLD", "up_15__max", "up_15__mea", "down_15__2",
+                         "qs_p_load", "Meridian", "Range", "Township",
+                         "Section", "Quarter")) %>%
+  # Rejoin geometries
+  left_join(ab_lld_geo, by = "LLD") %>%
+  # Add LUF names
+  left_join(luf_names, by = "LUF_CODE")
+
+st_write(obj = ab_cwpt2_qs_all, "./SpatialData/webapp_v1/Clean/ab_cwpt_qs_all.shp")
+
+ab_cwpt_qs_all <- st_read("./SpatialData/webapp_v1/Clean/ab_cwpt_qs_all.shp", 
+                          stringsAsFactors = FALSE, quiet = TRUE)
+
+ab_cwpt_qs_all <- ms_simplify(ab_cwpt2_qs_all, sys = TRUE)
+
+  
 
 
 
@@ -407,22 +450,6 @@ ab_cwpt2_qs_h2 <- ab_cwpt2_qs_3_2 %>%
 
 
 
-
-
-
-ab_counties_simp <- ab_counties %>%
-  # Remove excess columns
-  select(OBJECTID_1, SPMUN_NAME, MD_NAME, SPAREA_NAM) %>%
-  # Remove fragment (ghost) polygons
-  filter(OBJECTID_1 <= 74) %>%
-  # Create one variable for County/MD/SA name
-  mutate(Rural_MD_County = ifelse(!is.na(SPMUN_NAME), SPMUN_NAME, MD_NAME)) %>% 
-  mutate(County_MD_SA = ifelse(!is.na(SPAREA_NAM), 
-                               SPAREA_NAM, Rural_MD_County)) %>%
-  select(County_MD_SA)
-
-ab_gw_simp <- ab_gw %>%
-  select(GWA_NAME)
 
 # Spatial Join (intersect)
 #   - Want county information appended to each quarter-section.

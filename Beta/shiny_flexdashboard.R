@@ -23,4 +23,8 @@ shinyApp(ui, server)
 
 # Header
 
+# Advanced Layouts
+
+# e.g., tabset, pages 
+
 
