@@ -34,7 +34,7 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 ### Rural Municipalities, Counties, and Special Areas
 
-+ [Lac Ste. Anne](https://mabecker89.github.io/ABMI-CWPT/test)
++ [Lac Ste. Anne](https://mabecker89.github.io/ABMI-CWPT/LacSteAnneCounty_cwpt)
 + Parkland
 + Leduc
 + Brazeau
