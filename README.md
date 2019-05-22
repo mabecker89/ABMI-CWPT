@@ -28,13 +28,13 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 + In both interactive maps, satellite imagery can be displayed by selecting the 'Imagery' tab in the top-right corner.
 <br>
-![](../master/Screenshots/imagery.PNG)
+![](../master/Screenshots/imagery.PNG)</br>
 + In the second interactive map, two filter sliders are provided to allow for custom queries and map visualization.
 <br>
-![](../master/Screenshots/filter.PNG)
+![](../master/Screenshots/filter.PNG)</br>
 + Raw data can be downloaded directly (.csv, .xlsx formats) using the 'Download data' button on the bottom table.
 <br>
-![](../master/Screenshots/download.PNG)
+![](../master/Screenshots/download.PNG)</br>
 
 ## Available Areas of Interest
 
