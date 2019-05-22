@@ -35,24 +35,24 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 ### Rural Municipalities, Counties, and Special Areas
 
 + [Lac Ste. Anne](https://mabecker89.github.io/ABMI-CWPT/LacSteAnneCounty_cwpt)
-+ Parkland
-+ Leduc
-+ Brazeau
-+ Wetaskiwin
-+ Lacombe
-+ Vermilion River
-+ Flagstaff
-+ Red Deer
-+ Mountain View
-+ Rocky View
-+ Wheatland
-+ Vulcan
-+ Northern Sunrise
-+ Camrose
-+ Ponoka
-+ MD Greenview
-+ Grande Prairie 
-+ Big Lakes
++ [Parkland](https://mabecker89.github.io/ABMI-CWPT/ParklandCounty_cwpt)
++ [Leduc](https://mabecker89.github.io/ABMI-CWPT/LeducCounty_cwpt)
++ [Wetaskiwin](https://mabecker89.github.io/ABMI-CWPT/CountyofWetaskiwinNo10_cwpt)
++ [Lacombe](https://mabecker89.github.io/ABMI-CWPT/LacombeCounty_cwpt)
++ [Vermilion River](https://mabecker89.github.io/ABMI-CWPT/CountyofVermilionRiver_cwpt)
++ [Flagstaff](https://mabecker89.github.io/ABMI-CWPT/FlagstaffCounty_cwpt)
++ [Red Deer](https://mabecker89.github.io/ABMI-CWPT/RedDeerCounty_cwpt)
++ [Mountain View](https://mabecker89.github.io/ABMI-CWPT/MountainViewCounty_cwpt)
++ [Rocky View](https://mabecker89.github.io/ABMI-CWPT/RockyViewCounty_cwpt)
++ [Wheatland](https://mabecker89.github.io/ABMI-CWPT/WheatlandCounty_cwpt)
++ [Vulcan](https://mabecker89.github.io/ABMI-CWPT/VulcanCounty_cwpt)
++ [Camrose](https://mabecker89.github.io/ABMI-CWPT/CamroseCounty_cwpt)
++ [Ponoka](https://mabecker89.github.io/ABMI-CWPT/PonokaCounty_cwpt)
++ [Grande Prairie](https://mabecker89.github.io/ABMI-CWPT/CountyofGrandePrairieNo1_cwpt)
++ [Barrhead](https://mabecker89.github.io/ABMI-CWPT/CountyofBarrheadNo11_cwpt)
++ [Westlock](https://mabecker89.github.io/ABMI-CWPT/WestlockCounty_cwpt)
++ [Strathcona](https://mabecker89.github.io/ABMI-CWPT/StrathconaCounty_cwpt)
++ [Sturgeon](https://mabecker89.github.io/ABMI-CWPT/SturgeonCounty_cwpt)
 
 ### Land-Use Framework Planning Regions
 
@@ -72,11 +72,11 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 ## License
 
-This tool is licensed under MIT license [MIT license](https://github.com/mabecker89/ABMI-CWPT/blob/master/LICENSE.md) &copy; 2019 Marcus Becker, ABMI.
+The Clean Water Prioritization Tool (CWPT) is licensed under MIT license [MIT license](https://github.com/mabecker89/ABMI-CWPT/blob/master/LICENSE.md) &copy; 2019 Marcus Becker, ABMI.
 
 ## Questions?
 
-Have questions on how to use the CWPT? Features you would like to see added?
+Have questions on how to use the CWPT? Features you would like to see added? A different area of interest?
 
 Contact:
 
