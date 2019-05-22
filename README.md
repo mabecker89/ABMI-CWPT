@@ -34,11 +34,15 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 + In the second interactive map, two filter sliders are provided to allow for custom queries and map visualization.
 
-![](../master/Screenshots/filter.PNG)
+<p align="center">
+  <img src="https://github.com/mabecker89/ABMI-CWPT/blob/master/Screenshots/filter.PNG">
+</p>
 
 + Raw data can be downloaded directly (.csv, .xlsx formats) using the 'Download data' button on the bottom table.
 
-![](../master/Screenshots/download.PNG)
+<p align="center">
+  <img src="https://github.com/mabecker89/ABMI-CWPT/blob/master/Screenshots/download.PNG">
+</p>
 
 ## Available Areas of Interest
 
