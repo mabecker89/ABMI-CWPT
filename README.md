@@ -1,7 +1,6 @@
-# Clean Water Prioritization Tool (CWPT) 
-> *Produced by the Alberta Biodiversity Monitoring Institute (ABMI)*
+# Clean Water Prioritization Tool (CWPT)
 <img align="right" width="100" height="100" src="https://github.com/mabecker89/ABMI-CWPT/blob/master/abmi_logo.png">
-
+> *Produced by the Alberta Biodiversity Monitoring Institute (ABMI)*
 #### Project Developers: Marcus Becker, Thomas Habib
 
 ---
