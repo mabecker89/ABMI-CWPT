@@ -28,7 +28,9 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 + In both interactive maps, satellite imagery can be displayed by selecting the 'Imagery' tab in the top-right corner.
 
-![](../master/Screenshots/imagery.PNG)
+<p align="center">
+  <img src="https://github.com/mabecker89/ABMI-CWPT/blob/master/Screenshots/imagery.PNG">
+</p>
 
 + In the second interactive map, two filter sliders are provided to allow for custom queries and map visualization.
 
