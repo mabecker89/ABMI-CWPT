@@ -88,7 +88,7 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 ## License
 
-The Clean Water Prioritization Tool (CWPT) is licensed under MIT license [MIT license](https://github.com/mabecker89/ABMI-CWPT/blob/master/LICENSE.md) &copy; 2019 Marcus Becker, ABMI.
+The Clean Water Prioritization Tool (CWPT) is licensed under [MIT license](https://github.com/mabecker89/ABMI-CWPT/blob/master/LICENSE.md) &copy; 2019 Marcus Becker, ABMI.
 
 ## Questions?
 
