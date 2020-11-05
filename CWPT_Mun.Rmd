@@ -1,0 +1,425 @@
+---
+params:
+  aoi_names:
+title: "Clean Water Prioritization Tool (CWPT)"
+subtitle: <h1>An Application to `r params$aoi_names`, Alberta</h>
+date: "`r as.Date(Sys.time())`"
+output:
+  html_document:
+    highlight: zenburn
+    theme: readable
+    toc: yes
+fontsize: 10.5pt
+urlcolor: blue
+---
+
+<style>
+    body .main-container {
+        max-width: 1250px;
+    }
+</style>
+
+```{r setup, include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE}
+
+# Load packages
+library(tidyverse)
+library(sf)
+# devtools::install_github("mabecker89/leaflet@crosstalk6")
+library(leaflet)
+library(leaflet.extras)
+library(crosstalk)
+library(DT)
+library(sp)
+library(rmapshaper)
+
+# Set options for map & figure size 
+knitr::opts_chunk$set(out.width = '100%')
+
+# Include ABMI logo
+htmltools::img(src = knitr::image_uri("./abmi_logo.png"),
+               alt = 'logo',
+               style = 'position:absolute; top:0; right:0; padding:22px;')
+
+# Import data
+cwpt_qs_all <- st_read("./Data/Spatial/Clean/cwpt_qs_all.shp",
+                       stringsAsFactors = FALSE, quiet = TRUE)
+
+cwpt_qs_mun_w50 <- read_csv("./Data/Clean/cwpt_qs_mun_w50.csv")
+
+ab_counties <- st_read("./Data/Spatial/Clean/ab_counties_md_sa.shp",
+                       stringsAsFactors = FALSE, quiet = TRUE)
+
+# Filter for AOI in QS data
+qs_aoi <- cwpt_qs_mun_w50 %>%
+  filter(County_MD_SA == params$aoi_names) %>%
+  select(County_MD_SA, LLD, 
+         Quarter, Section, Township, Range, Meridian,
+         j_land_mean, j_land_max, q_land_mean, q_land_max,
+         j_pix_p_mean, q_pix_p_mean, 
+         pct_rp:pct_ma, pct_ng,
+         LinkID) %>%
+  mutate(total_ag = pct_rp + pct_crop + pct_tp + pct_ma) %>%
+  mutate(total_ag = if_else(total_ag > 1, 1, total_ag))
+
+# Join QS data to QS geometry
+cwpt_qs_aoi <- cwpt_qs_all %>%
+  filter(LinkID %in% qs_aoi$LinkID) %>%
+  left_join(qs_aoi, by = "LinkID") %>%
+  st_transform("+init=epsg:4326") %>%
+  ms_simplify(sys = TRUE)
+
+# Filter for AOI in county shapefile
+aoi <- ab_counties %>%
+  filter(C_MD_SA == params$aoi_names) %>%
+  st_transform("+init=epsg:4326")
+
+names(st_geometry(cwpt_qs_aoi)) = NULL
+names(st_geometry(aoi)) = NULL
+
+```
+
+# Introduction
+
+The Alberta Biodiversity Monitoring Institute has developed a Clean Water Prioritization Tool (CWPT) to help guide water resource managers, landowners, and extension agents in maintaining and enhancing water-related ecosystem services throughout their area of interest. Protecting the health and quality of streams, rivers, and lakes is a goal common to many jurisdictions throughout the province, and practical guidance on where to target conservation and management efforts in an efficient manner is needed. 
+
+Based off a methodology developed by the [Natural Capital Project (2018)](http://data.naturalcapitalproject.org/rios_releases/RIOSGuide_Combined_v1.1.16_30May2016.pdf), the CWPT is a spatially-explicit mapping product designed to provide information on the relative importance of each quarter-section in influencing the provision of clean surface water. The tool also gives guidance on possible management actions at each quarter to improve or maintain service delivery. Designed around the objective of reducing excess nutrient (phosphorus, nitrogen) and sediment loading into aquatic systems, the CWPT can be used to help promote downstream water quality improvements, which can potentially decrease water treatment costs and lower pollutant-related health risks to humans and livestock. 
+
+***
+
+# Modeled Landscape Attributes 
+
+The non-point source runoff of nutrients and sediment across the landscape is estimated using export and loading coefficients developed specifically for major landcover and human footprint types in the Alberta context [(Donahue, 2013)](https://github.com/mabecker89/ABMI-CWPT/blob/master/Documents/Donahue_2013.pdf). This information is used in conjunction with annual precipitation data, detailed landcover and human footprint information[^1], and the simulation of overland flow based on a hydrologically corrected 15m digital elevation model [(Habib et al 2016)](https://peerj.com/articles/2814/). From this, the CWPT relies on three modeled attributes of the landscape to evaluate the relative importance of each quarter-section in an area of interest:
+
+[^1]: Information on ABMI's Human Footprint inventory is available [here](https://abmi.ca/home/data-analytics/da-top/da-product-overview/GIS-Land-Surface/HF-inventory.html).
+
++ **Upslope Accumulation**: The sum total of nutrients and sediment exported from *upslope* areas whose flow paths move through the quarter-section. 
+
++ **Downslope Retention**: The sum total of nutrient and sediment retention potential of all *downslope* areas along the flow path from the quarter-section to a stream, river, or lake.
+
++ **On-pixel Contribution**: The nutrient source and retention capabilities of each quarter-section.
+
+***
+
+# Components of the CWPT
+
+There are two components of the CWPT, and they are designed to address the following applied questions (in order):
+
+1) **Where do I target my efforts to achieve gains in water quality?** and
+
+2) **Which management actions are appropriate once I get there?**
+
+The first component, landscape position importance, attempts to answer the first question by ranking each quarter-section based on its relative potential to impact downstream water quality. The second, on-pixel contribution, can be used to guide appropriate management actions.   
+
+### 1. Landscape Position Importance 
+
+The relative importance of each quarter-section in terms of water purification depends on the first two landscape attributes, both of which are highly related to **landscape position** and nearby **land use**. 
+
+With respect to upslope accumulation, quarters that are topographically situated such that they receive large amounts of nutrient and/or sediment runoff from upslope areas will have a greater opportunity to trap these pollutants. Note that this can be due to either draining a large area, or draining an area with high runoff (e.g. due to intensive development) - or for both reasons.
+
+Importance is also reflected by the second attribute, downslope retention potential. This attribute refers to the length of the flow path downslope of the quarter before flowing into a stream or river, weighted by the ability of land along that path to filter and trap nutrients/sediment. If downslope retention potential is low (due to a short flow path and/or highly developed land along it), management actions on the quarter will be relatively more beneficial for water purification. Conversely, if retention potential downslope is high, the area will be less important.
+
+For both of these continuous variables, each quarter is binned into one of ten groups and assigned an index score between 1 and 10. The binning procedure follows the Jenks natural breaks classification method, in which quarters with similiar values are grouped together[^2]. The distribution among quarters in `r params$aoi_names` in both upslope accumulation and downslope retention, along with the index score assigned, can be viewed in the figures below.   
+
+[^2]:The method used here is the Fisher-Jenks algorithm, first proposed by Fisher (1958) and subsequently discussed by Slocum et al (2005). This algorithm seeks to minimize within-group variance and maximize between-group variance. 
+
+<br>
+<br>
+<div class = "row">
+
+<div class = "col-md-5">
+The figure to the right displays the distribution of upslope accumulation values calculated for each quarter-section in `r params$aoi_names`. As a right-skewed distribution, the majority of quarters receive a low index score (1-4), which means a relatively low amount of nutrients and/or sediment flow into them from upslope areas. Conversely, those quarters with high values receive a higher load.  
+</div>
+<div class = "col-md-7">
+```{r include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE}
+
+# Histogram showing distribution of scores across the AOI
+
+c1 <- (c('#c6dbef','#9ecae1','#6baed6',
+         '#4292c6','#2171b5','#08519c','#08306b'))
+c2 <- colorRampPalette(c1)
+
+qs_info <- cwpt_qs_mun_w50 %>%
+  filter(County_MD_SA == params$aoi_names) %>%
+  select(LLD, up_p_mean, down_mean, pix_p_mean,
+         j_up_pmean, j_down_mean1, j_pix_p_mean, j_land_mean,
+         pct_up_p_mean, pct_down_mean, pct_pix_p_mean) %>%
+  mutate(down_mean = down_mean / 1000)
+
+qs_info %>%
+  filter(pct_up_p_mean <= 0.97) %>%
+  ggplot(aes(x = up_p_mean, fill = as.factor(j_up_pmean))) +
+  geom_histogram(bins = 50) +
+  scale_fill_manual(values = c2(10),
+                    name = "Upslope\nAccumulation\nIndex\nScore") +
+  labs(x = "Upslope Accumulation Value",
+       y = "Number of Quarter Sections") +
+  theme_classic()
+
+```
+</div>
+</div>
+<br>
+
+<div class = "row">
+
+<div class = "col-md-5">
+This figure displays the distribution of the second landscape attribute, downslope retention potential, calculated for each quarter-section in `r params$aoi_names`. It is important to note that the index scores are reversed compared to upslope accumulation, since quarters with lower downslope retention values are actually *more* important in terms of their ability to deliver water purification services (thus reflected by a higher score).
+</div>
+<div class = "col-md-7">
+```{r include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE}
+
+qs_info %>%
+  filter(pct_down_mean <= 0.97) %>%
+  ggplot(aes(x = down_mean, fill = as.factor(j_down_mean1))) +
+  geom_histogram(bins = 50) +
+  scale_fill_manual(values = c2(10),
+                    name = "Downslope\nRetention\nIndex\nScore") +
+  labs(x = "Downslope Retention Value",
+       y = "Number of Quarter Sections") +
+  theme_classic()
+
+```
+</div>
+</div>
+
+<br>
+<br>
+An overall **Landscape Position Importance Score** is calculated as the average between the two intermediate scores. As such, the relative importance of a quarter-section within a given area of interest is based on a combination of both landscape attributes. The higher the score, the more important that quarter-section is (relative to others in an area of interest) to water purification services. 
+
+The map below displays the landscape importance score associated with each quarter-section located within `r params$aoi_names`, Alberta. From this map, the user can also select a specific quarter-section to retrieve the legal land description and importance score, as well as view satellite imagery.
+
+<br>
+```{r include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE, fig.height=9}
+
+# Colours
+land <- colorNumeric("Blues", domain = cwpt_qs_aoi$j_land_mean)
+
+# Generate leaflet map of landscape importance score
+map_land_aoi <-
+  aoi %>%
+  leaflet() %>%
+  addTiles() %>%
+  addProviderTiles("Esri.WorldImagery", group = "Imagery") %>%
+  addFullscreenControl() %>%
+  addResetMapButton() %>%
+  addMapPane(name = "AOI Boundary", zIndex = 420) %>%
+  addMapPane(name = "Layers", zIndex = 410) %>%
+  addScaleBar(position = "bottomleft",
+              options = scaleBarOptions(imperial = FALSE)) %>%
+  
+  # Polygon layers
+  addPolylines(color = "#070707", weight = 3, smoothFactor = 0.2,
+               options = leafletOptions(pane = "AOI Boundary")) %>%
+  
+  addPolygons(data = cwpt_qs_aoi, color = "#444444", weight = 0.4, 
+              smoothFactor = 0.5, opacity = 1.0, fillOpacity = 0.75,
+              # Using UPSLOPE MEAN & JENKS
+              fillColor = ~ land(j_land_mean),
+              group = "Landscape Position Importance Score",
+              popup = paste("Legal Land Description:", 
+                            "<b>", cwpt_qs_aoi$LLD, "</b>", "<br>",
+                            "<br>",
+                            "Landscape Position Importance Score:",
+                            "<b>", cwpt_qs_aoi$j_land_mean, "</b>"),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  # Legend layer
+  addLegend(data = cwpt_qs_aoi, position = "bottomright", pal = land, 
+            values = ~ j_land_mean, 
+            title = "Score", 
+            opacity = 1, group = "Landscape Position Importance Score") %>%
+  
+  # Layers control
+  addLayersControl(overlayGroups = c("Landscape Position Importance Score",
+                                     "Imagery"),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  
+  hideGroup("Imagery")
+
+map_land_aoi
+
+```
+<br>
+<br>
+
+### 2. On-Pixel Contribution
+
+The second component of the CWPT involves the third landscape attribute, on-pixel (i.e. quarter-section) contribution. The nutrient and sediment load generated at each quarter-section is calculated using export coefficients from [Donahue (2013)](https://github.com/mabecker89/ABMI-CWPT/blob/master/Documents/Donahue_2013.pdf). Similar to the other two attributes, the Jenks natural breaks classification method is used to bin each quarter section into one of ten groups, and given a score from 1-10. 
+
+Rather than reflecting a progressive state of importance, this score represents a diverging scale that provides an indication as to what type of management actions may be appropriate in regard to water purification. For example, a quarter-section with a low on-pixel contribution score will be generating a relatively small amount of nutrient and sediment runoff. In this case, the combination of low on-pixel sources and a high nutrient retention rate suggest that management oriented around **conservation** of existing landcover is most suitable. 
+
+On the other hand, a high on-pixel score would indicate that a high amount of nutrient and sediment runoff is occurring (due to high on-pixel sources and/or low rentention rates) and that **restoration** and/or **mitigation** actions should be prioritized. Such activities, for example, may include planting native vegetation or permanent cover, revegetating riparian areas, livestock management, and fertilizer management.
+
+<br>
+<br>
+<div class = "row">
+
+<div class = "col-md-5">
+This figure displays the distribution of the third landscape attribute, on-pixel contribution, calculated for each quarter-section in `r params$aoi_names`. This attribute more normally distributed, leading to higher number of quarter-sections with middling scores (e.g. 4-7). Areas with higher scores are generally associated with more intensive and developed land uses. Conversely, quarters with low scores will often contain a greater proportion of native cover. 
+</div>
+<div class = "col-md-7">
+```{r include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE}
+
+c3 <- (c("#00441b","#238b45", "#74c476","#a1d99b", "#e5f5e0", 
+                     "#f6e8c3","#dfc27d", "#bf812d","#8c510a", "#543005"))
+c4 <- colorRampPalette(c3)
+
+qs_info %>%
+  filter(pct_pix_p_mean <= 0.97) %>%
+  ggplot(aes(x = pix_p_mean, fill = as.factor(j_pix_p_mean))) +
+  geom_histogram(bins = 50) +
+  scale_fill_manual(values = c4(10),
+                    name = "On-Pixel\nContribution\nScore") +
+  labs(x = "On-Pixel Contribution",
+       y = "Number of Quarter Sections") +
+  theme_classic()
+
+```
+</div>
+</div>
+
+<br>
+<br>
+
+Both components of the CWPT are designed be used in tandem to identify priority quarter-sections within an area of interest and plan appropriate management actions. The map below displays the on-pixel contribution score associated with each quarter-section in the `r params$aoi_names`; however, the user can filter the data to view only those quarter-sections that score within a user-specified range on the landscape position importance score. Once positionally-important areas are identified, the on-pixel score can be used as an indicator of which suite of management actions would be suitable at each site. 
+
+In addition, if agricultural areas are targeted for on-the-ground projects, the second slider can be used to filter for quarter-sections that meet a user-specified threshold of agricultural use[^3]. The table below can be used to create additional queries as well as download the raw quarter-section data for use in other software.
+
+[^3]: The calculated proportion of agriculture in each quarter section is based on the Human Footprint inventory (2016) developed by the ABMI.    
+
+<br>
+<br>
+
+```{r include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE, fig.height=9}
+
+# Colours
+cp <- colorNumeric(c("#00441b","#238b45", "#74c476","#a1d99b", "#e5f5e0", 
+                     "#f6e8c3","#dfc27d", "#bf812d","#8c510a", "#543005"),
+                   domain = cwpt_qs_aoi$j_pix_p_mean)
+
+# Convert sf object to sp (required for crosstalk reactivity)
+cwpt_qs_aoi_sp <- cwpt_qs_aoi %>%
+  as_Spatial()
+
+# Create SharedData objects
+sd <- SharedData$new(cwpt_qs_aoi_sp)
+sd_df <- SharedData$new(as.data.frame(cwpt_qs_aoi_sp@data), group = sd$groupName())
+
+# Create filter slider
+filter_slider("pixelscore", "Filter for Landscape Position Importance Score", 
+              sd_df, ~j_land_mean, step = 0.5, width = 550, ticks = TRUE)
+
+filter_slider("ag", 
+              "Filter for percentage of quarter-section classified as Agriculture",
+              sd_df, ~total_ag, step = 0.05, width = 550, ticks = TRUE)
+
+# Generate leaflet map of on-pixel scores
+map_pix_aoi <-
+  leaflet(sd) %>%
+  addTiles() %>%
+  addProviderTiles("Esri.WorldImagery", group = "Imagery") %>%
+  addFullscreenControl() %>%
+  addResetMapButton() %>%
+  addScaleBar(position = "bottomleft",
+              options = scaleBarOptions(imperial = FALSE)) %>%
+  addMapPane(name = "AOI Boundary", zIndex = 420) %>%
+  addMapPane(name = "Layers", zIndex = 410) %>%
+  
+  # Add polygons
+  addPolygons(color = "#444444", weight = 0.4, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.75,
+              # Using JENKS 
+              fillColor = ~cp(j_pix_p_mean),
+              group = "On-Pixel Contribution",
+              popup = paste("Legal Land Description:", 
+                            "<b>", cwpt_qs_aoi_sp$LLD, "</b>", "<br>",
+                            "<br>",
+                            "Pixel Contribution Score:",
+                            "<b>", cwpt_qs_aoi_sp$j_pix_p_mean, "</b>"),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              options = leafletOptions(pane = "Layers")) %>%
+  
+  addPolylines(data = aoi, color = "#070707", weight = 2.5, smoothFactor = 0.2,
+               options = leafletOptions(pane = "AOI Boundary")) %>%
+  
+  # Add legend
+  addLegend(position = "bottomright", pal = cp, values = ~ j_pix_p_mean,
+            title = "On-Pixel Score", opacity = 1) %>%
+  
+  # Layers control
+  addLayersControl(overlayGroups = c("On-Pixel Contribution", "Imagery"),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  hideGroup("Imagery")
+  
+map_pix_aoi
+
+```
+
+```{r include=TRUE, echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE, out.width='100%'}
+
+datatable(data = sd_df,
+          extensions = "Buttons",
+          filter = list(
+            position = 'top', clear = FALSE, plain = TRUE),
+          rownames = FALSE,
+          caption = NULL,
+          class = 'compact',
+          width = "100%",
+          options = list(pageLength = 10,
+                         columnDefs = list(list(visible = FALSE,
+                                            targets = c(0,2,7,9:11,13,17,19))),
+                         dom = 'Blfrtip',
+                         buttons = 
+                           list(list(extend = 'collection',
+                                     buttons =
+                            list(list(extend = 'csv',
+                                      filename = 'cwpt_abmi'),
+                                 list(extend = 'excel',
+                                      filename = 'cwpt_abmi')),
+                         text = 'Download data'))),
+          colnames = c("", "AOI", "", 
+                       "Quarter", "Section", "Township", "Range", "",
+                       "Landscape Imp Score", "", "", "",
+                       "On-Pixel Score", "",
+                       "Rough Pasture",
+                       "Cropland",
+                       "Tame Pasture",
+                       "",
+                       "Native Grassland", "")
+          ) %>%
+  formatPercentage(c("pct_rp",
+                     "pct_crop",
+                     "pct_tp",
+                     "pct_ma",
+                     "pct_ng",
+                     "total_ag")) %>%
+  formatStyle(columns = c(4,8), textAlign = 'right')
+
+```
+
+***
+
+# Summary
+
+The CWPT can be used to identify priority areas and guide the placement of conservation and restoration projects on the landscape. The first index score, landscape importance, indicates the relative importance of each quarter-section within a region, whereas the second score, on-pixel contribution, can be used as a guide for deciding upon the appropriate course of action. 
+
+It is important to keep in mind that local conditions will vary widely at each site, and that some management actions may be more suitable/effective than others. Using this tool as a first-step screening process, landowners, managers, and extension officials can work together to determine a mutually beneficial course of action to improve or mantain water-related ecosystem services.
+
+<br>
+<br>
+<br>
+
+
+
+
+
+
+
+
+
+
+
+
