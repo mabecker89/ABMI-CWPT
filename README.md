@@ -50,6 +50,7 @@ Clicking on an area of interest (AOI) from those offered below will take the use
 
 ### Rural Municipalities, Counties, and Special Areas
 
++ [Northern Sunrise County](https://mabecker89.github.io/ABMI-CWPT/CWPT_NS)
 + [Lac Ste. Anne](https://mabecker89.github.io/ABMI-CWPT/LacSteAnneCounty_cwpt)
 + [Parkland](https://mabecker89.github.io/ABMI-CWPT/ParklandCounty_cwpt)
 + [Leduc](https://mabecker89.github.io/ABMI-CWPT/LeducCounty_cwpt)
